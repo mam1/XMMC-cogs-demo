@@ -1,0 +1,22 @@
+/*
+ * This code loops checking for a query request  
+ * If it receives one it it updates its query counter
+*/
+
+#include <propeller.h>
+#include "main.h"
+
+_NAKED
+void main (volatile CONTROL_BLOCK *cb)
+{ 
+ cb->query_ctr=0;			//zero the query counter 
+ while(1)					//loop forever
+ {
+    if(cb->query_flag)		//test for query
+    {
+        cb->query_flag = 0;	//reset query flag
+        cb->query_ctr++;	//increment query counter
+    }
+ }
+
+}

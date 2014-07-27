@@ -18,109 +18,84 @@
  * returned when quired for status.
  * 
  */
+
 #include <stdio.h>
 #include <unistd.h>
 #include <propeller.h>
-#include "cog_test.h"
-#include "simpletools.h"                      // Include simpletools library 
-
+#include "main.h"
 
 /* allocate control block & stack for cogA */
 struct {
-    unsigned stack[STACK_SIZE_A];
-    volatile struct cogA_mailbox A;
+    unsigned            stack[STACK_A];
+    CONTROL_BLOCK       A;
 } parA;
 
 /* allocate control block & stack for cogB */
 struct {
-    unsigned stack[STACK_SIZE_B];
-    volatile struct cogB_mailbox B;
+    unsigned            stack[STACK_B];
+    CONTROL_BLOCK       B;
 } parB;
 
 /* allocate control block & stack for cogC */
 struct {
-    unsigned stack[STACK_SIZE_C];
-    volatile structm  cogC_mailbox C;
+    unsigned            stack[STACK_C];
+    CONTROL_BLOCK       C;
 } parC;
+
+/**************************** cog control routines ******************************/
 
 /* start cogA */
 int start_cogA(volatile void *parptr)
 { 
-    int size = (_load_stop_rtc_cog - _load_start_rtc_cog)*4;	//code size in bytes
+    int size = (_load_stop_cogA_cog - _load_start_cogA_cog)*4;	//code size in bytes
     printf("cogA code size %i bytes\n",size);
     unsigned int code[size];  				 //allocate enough HUB to hold the COG code
     memcpy(code, _load_start_rtc_cog, size); //assume xmmc
     return cognew(code, parptr);
 }
 
-/* start cogA */
-void startA(volatile void *parptr)
-{
-    extern unsigned int _load_start_cogA_cog[];
-#if defined(__PROPELLER_XMM__) || defined(__PROPELLER_XMMC__)
-    load_cog_driver_xmm(_load_start_cogA_cog, 496, (uint32_t *)parptr);
-#else
-    cognew(_load_start_cogA_cog, parptr);
-#endif
-}
-
 /* start cogB */
-void startB(volatile void *parptr)
-{
-    extern unsigned int _load_start_cogB_cog[];
-#if defined(__PROPELLER_XMM__) || defined(__PROPELLER_XMMC__)
-    load_cog_driver_xmm(_load_start_cogB_cog, 496, (uint32_t *)parptr);
-#else
-    cognew(_load_start_cogB_cog, parptr);
-#endif
+int start_cogB(volatile void *parptr)
+{ 
+    int size = (_load_stop_cogB_cog - _load_start_cogB_cog)*4;  //code size in bytes
+    printf("cogB code size %i bytes\n",size);
+    unsigned int code[size];                 //allocate enough HUB to hold the COG code
+    memcpy(code, _load_start_rtc_cog, size); //assume xmmc
+    return cognew(code, parptr);
 }
 
 /* start cogC */
-void startC(volatile void *parptr)
-{
-    extern unsigned int _load_start_cogC_cog[];
-#if defined(__PROPELLER_XMM__) || defined(__PROPELLER_XMMC__)
-    load_cog_driver_xmm(_load_start_cogC_cog, 496, (uint32_t *)parptr);
-#else
-    cognew(_load_start_cogC_cog, parptr);
-#endif
+int start_cogC(volatile void *parptr)
+{ 
+    int size = (_load_stop_cogC_cog - _load_start_cogC_cog)*4;  //code size in bytes
+    printf("cogC code size %i bytes\n",size);
+    unsigned int code[size];                 //allocate enough HUB to hold the COG code
+    memcpy(code, _load_start_rtc_cog, size); //assume xmmc
+    return cognew(code, parptr);
+
 }
+
+/************************* command processor routines *************************/
+
+int 
+
+/****************************** start main routine ******************************/
 
 int main(void)
 {
-/* get some lock ids */
-    parA.A.message_lock = locknew();
-    parB.B.message_lock = locknew();
-    parC.C.message_lock = locknew();
-    sleep(2);  
-/* start the A cog */
-    printf("starting cogA\n");
-    startA(&parA.A);
-    while(lockset(parA.A.message_lock));
-    printf("%s\n",parA.A.cog_message);
-    lockclr(parA.A.message_lock);
+    int         cog_num_A, cog_num_B, cog_numC; //cog number where the code is running
+    char        input-bufffer[]
+/* display startup message */
+    sleep(1);
+    print("XMMC-cogs demo started\n");  
 
-/* start the B cog */
-    printf("starting cogB\n");
-    startB(&parB.B);
-    while(lockset(parB.B.message_lock));
-    printf("%s\n",parB.B.cog_message);
-    lockclr(parB.B.message_lock);
-
-/* start the C cog */
-    printf("starting cogC\n");
-    startC(&parC.C);
-    while(lockset(parC.C.message_lock));
-    printf("%s\n",parC.C.cog_message);
-    lockclr(parC.C.message_lock);
 
 /* loop forever */
-    while(1) {
+    while(1) 
+    {
+        readStr();
 
-        sleep(2);
-        printf("cogA: %s\n",parA.A.cog_message);
-        printf("cogB: %s\n",parB.B.cog_message);
-        printf("cogC: %s\n",parC.C.cog_message);
+
     }
     return 0;
 }
