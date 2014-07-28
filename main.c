@@ -25,7 +25,6 @@
 #include "main.h"
 
 /* allocate control block & stack for cogA */
-
 struct {
     unsigned            stack[STACK_A];
     CONTROL_BLOCK       A;
@@ -151,19 +150,19 @@ int main(void)
         switch(process(input_buffer))
         {
             case 0: //startA
-                if(start_cogA(&parA)== -1)
+                if(start_cogA(&parA.A)== -1)
                     printf("  problem starting cogA\n");
                 else
                     printf("  cogA started\n");
                 break;
             case 1: //startB
-                if(start_cogB(&parB)== -1)
+                if(start_cogB(&parB.B)== -1)
                     printf("  problem starting cogB\n");
                 else
                     printf("  cogB started\n");
                 break;
             case 2: //startC
-                if(start_cogC(&parC)== -1)
+                if(start_cogC(&parC.C)== -1)
                     printf("  problem starting cogC\n");
                 else
                     printf("  cogC started\n");
@@ -185,25 +184,27 @@ int main(void)
                 break;
             case 6: //queryA
                 parA.A.query_flag = 1;
-                printf("after call <%i>\n",parA.A.query_flag);
-                waitcnt(50000000 + _CNT);              //wait until initialization is complete
-                printf("after call <%i>\n",parA.A.query_flag);
-
+                break;
+            case 7: //queryB
+                parB.B.query_flag = 1;
+                break;
+            case 8: //queryC
+                parC.C.query_flag = 1;
                 break;
             case 9: //status
                 printf("  cog A is ");
                 if(parA.A.cog == -1)
-                    printf("not running\n");
+                    printf("not running, query count %i\n",parA.A.query_ctr);
                 else
                     printf("running on cog %i, query count %i\n",parA.A.cog,parA.A.query_ctr);
                 printf("  cog B is ");
                 if(parB.B.cog == -1)
-                    printf("not running\n");
+                    printf("not running, query count %i\n", parB.B.query_ctr);
                 else
                     printf("running on cog %i, query count %i\n",parB.B.cog,parB.B.query_ctr);
                 printf("  cog C is ");
                 if(parC.C.cog == -1)
-                    printf("not running\n");
+                    printf("not running, query count %i\n",parC.C.query_ctr);
                 else
                     printf("running on cog %i, query count %i\n",parC.C.cog,parC.C.query_ctr);
                 break;
