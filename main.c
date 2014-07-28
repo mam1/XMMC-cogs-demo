@@ -154,52 +154,52 @@ int main(void)
     while(1) 
     {
         printf("\nenter command > ");
-        fgets(input_buffer,INPUT_BUFFER,stdin);
-        switch(process(input_buffer))   //test user input,take appropriate action
+        fgets(input_buffer,INPUT_BUFFER,stdin); //get a line of input
+        switch(process(input_buffer))           //test input,take appropriate action
         {
-            case 0: //startA
+            case 0:     //startA
                 if(start_cogA(&parA.A)== -1)
                     printf("  problem starting cogA\n");
                 else
                     printf("  cogA started\n");
                 break;
-            case 1: //startB
+            case 1:     //startB
                 if(start_cogB(&parB.B)== -1)
                     printf("  problem starting cogB\n");
                 else
                     printf("  cogB started\n");
                 break;
-            case 2: //startC
+            case 2:     //startC
                 if(start_cogC(&parC.C)== -1)
                     printf("  problem starting cogC\n");
                 else
                     printf("  cogC started\n");
                 break;
-            case 3: //stopA
+            case 3:     //stopA
                 cogstop(parA.A.cog);
                 printf("  cog A stopped\n");
                 parA.A.cog = -1;
                 break;
-            case 4: //stopB
+            case 4:     //stopB
                 cogstop(parB.B.cog);
                 printf("  cog B stopped\n");
                 parB.B.cog = -1;
                 break;
-            case 5: //stopC
+            case 5:     //stopC
                 cogstop(parC.C.cog);
                 printf("  cog C stopped\n");
                 parC.C.cog = -1;
                 break;
-            case 6: //queryA
+            case 6:     //queryA
                 parA.A.query_flag = 1;
                 break;
-            case 7: //queryB
+            case 7:     //queryB
                 parB.B.query_flag = 1;
                 break;
-            case 8: //queryC
+            case 8:     //queryC
                 parC.C.query_flag = 1;
                 break;
-            case 9: //status
+            case 9:     //status
                 status();
                 break;
             case 10:    //exit
