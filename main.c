@@ -25,6 +25,7 @@
 #include "main.h"
 
 /* allocate control block & stack for cogA */
+
 struct {
     unsigned            stack[STACK_A];
     CONTROL_BLOCK       A;
@@ -42,59 +43,177 @@ struct {
     CONTROL_BLOCK       C;
 } parC;
 
+/* command processor command list */
+char    *command[COMMANDS] = {
+/*  0 */    "startA",
+/*  1 */    "startB",
+/*  2 */    "startC",
+/*  3 */    "stopA",
+/*  4 */    "stopB",
+/*  5 */    "stopC",
+/*  6 */    "queryA",
+/*  7 */    "queryB",
+/*  8 */    "queryC",
+/*  9 */    "status",
+/* 10 */    "exit"};
+
 /**************************** cog control routines ******************************/
 
 /* start cogA */
 int start_cogA(volatile void *parptr)
 { 
-    int size = (_load_stop_cogA_cog - _load_start_cogA_cog)*4;	//code size in bytes
-    printf("cogA code size %i bytes\n",size);
-    unsigned int code[size];  				 //allocate enough HUB to hold the COG code
-    memcpy(code, _load_start_rtc_cog, size); //assume xmmc
-    return cognew(code, parptr);
+    /* beginning and ending addresses of the code for the A cog */
+    extern unsigned int         _load_start_cogA_cog[];
+    extern unsigned int         _load_stop_cogA_cog[];
+
+    if(parA.A.cog != -1)
+        cogstop(parA.A.cog);  //stop the cog
+
+    int size  = (_load_stop_cogA_cog - _load_start_cogA_cog)*4;	//code size in bytes
+    printf("  cogA code size %i bytes - ",size);
+    unsigned int code[size];  				  //allocate enough HUB to hold the COG code
+    memcpy(code, _load_start_cogA_cog, size); //copy the code to HUB memory
+    parA.A.cog = cognew(code, parptr);        //start the cog
+    return parA.A.cog;
 }
 
 /* start cogB */
 int start_cogB(volatile void *parptr)
 { 
-    int size = (_load_stop_cogB_cog - _load_start_cogB_cog)*4;  //code size in bytes
-    printf("cogB code size %i bytes\n",size);
-    unsigned int code[size];                 //allocate enough HUB to hold the COG code
-    memcpy(code, _load_start_rtc_cog, size); //assume xmmc
-    return cognew(code, parptr);
+    /* beginning and ending addresses of the code for the B cog */
+    extern unsigned int         _load_start_cogB_cog[];
+    extern unsigned int         _load_stop_cogB_cog[]; 
+
+    if(parB.B.cog != -1)
+        cogstop(parB.B.cog);  //stop the cog
+
+    int size  = (_load_stop_cogB_cog - _load_start_cogB_cog)*4; //code size in bytes    
+    printf("  cogB code size %i bytes - ",size);
+    unsigned int code[size];                  //allocate enough HUB to hold the COG code
+    memcpy(code, _load_start_cogB_cog, size); //copy the code to HUB memory  
+    parB.B.cog = cognew(code, parptr);        //start the cog
+    return parB.B.cog;
 }
 
 /* start cogC */
 int start_cogC(volatile void *parptr)
 { 
-    int size = (_load_stop_cogC_cog - _load_start_cogC_cog)*4;  //code size in bytes
-    printf("cogC code size %i bytes\n",size);
-    unsigned int code[size];                 //allocate enough HUB to hold the COG code
-    memcpy(code, _load_start_rtc_cog, size); //assume xmmc
-    return cognew(code, parptr);
+    /* beginning and ending addresses of the code for the C cog */
+    extern unsigned int         _load_start_cogC_cog[];
+    extern unsigned int         _load_stop_cogC_cog[]; 
 
+    if(parC.C.cog != -1)
+        cogstop(parC.C.cog);  //stop the cog
+
+    int size  = (_load_stop_cogC_cog - _load_start_cogC_cog)*4; //code size in bytes    
+    printf("  cogC code size %i bytes - ",size);
+    unsigned int code[size];                  //allocate enough HUB to hold the COG code
+    memcpy(code, _load_start_cogC_cog, size); //copy the code to HUB memory 
+    parC.C.cog = cognew(code, parptr);        //start the cog
+    return parC.C.cog;
 }
 
 /************************* command processor routines *************************/
+int process(char *input)
+{
+    int         i;
 
-int 
+    for(i=0;i<COMMANDS;i++)
+    {
+        if(strcmp(input,command[i])==0)
+            return i;
+    }
+    return -1;
 
+}
 /****************************** start main routine ******************************/
 
 int main(void)
 {
-    int         cog_num_A, cog_num_B, cog_numC; //cog number where the code is running
-    char        input-bufffer[]
+    char        input_buffer[INPUT_BUFFER];
+    // int         cmd_num;
+
 /* display startup message */
-    sleep(1);
-    print("XMMC-cogs demo started\n");  
+    waitcnt(500000 + _CNT);              //wait until initialization is complete
+    printf("\nXMMC-cogs demo started\n"); 
+
+/* set all cogs to not running */
+    parA.A.cog = -1; 
+    parB.B.cog = -1; 
+    parC.C.cog = -1; 
 
 
 /* loop forever */
     while(1) 
     {
-        readStr();
+        printf("\nenter command > ");
+        gets(input_buffer);
+        switch(process(input_buffer))
+        {
+            case 0: //startA
+                if(start_cogA(&parA)== -1)
+                    printf("  problem starting cogA\n");
+                else
+                    printf("  cogA started\n");
+                break;
+            case 1: //startB
+                if(start_cogB(&parB)== -1)
+                    printf("  problem starting cogB\n");
+                else
+                    printf("  cogB started\n");
+                break;
+            case 2: //startC
+                if(start_cogC(&parC)== -1)
+                    printf("  problem starting cogC\n");
+                else
+                    printf("  cogC started\n");
+                break;
+            case 3: //stopA
+                cogstop(parA.A.cog);
+                printf("  cog A stopped\n");
+                parA.A.cog = -1;
+                break;
+            case 4: //stopB
+                cogstop(parB.B.cog);
+                printf("  cog B stopped\n");
+                parB.B.cog = -1;
+                break;
+            case 5: //stopC
+                cogstop(parC.C.cog);
+                printf("  cog C stopped\n");
+                parC.C.cog = -1;
+                break;
+            case 6: //queryA
+                parA.A.query_flag = 1;
+                printf("after call <%i>\n",parA.A.query_flag);
+                waitcnt(50000000 + _CNT);              //wait until initialization is complete
+                printf("after call <%i>\n",parA.A.query_flag);
 
+                break;
+            case 9: //status
+                printf("  cog A is ");
+                if(parA.A.cog == -1)
+                    printf("not running\n");
+                else
+                    printf("running on cog %i, query count %i\n",parA.A.cog,parA.A.query_ctr);
+                printf("  cog B is ");
+                if(parB.B.cog == -1)
+                    printf("not running\n");
+                else
+                    printf("running on cog %i, query count %i\n",parB.B.cog,parB.B.query_ctr);
+                printf("  cog C is ");
+                if(parC.C.cog == -1)
+                    printf("not running\n");
+                else
+                    printf("running on cog %i, query count %i\n",parC.C.cog,parC.C.query_ctr);
+                break;
+            case 10:    //exit
+                printf("exiting program\n");
+                return 0;
+            default:
+                printf("<%s> is not a valid command\n",input_buffer);
+
+        }
 
     }
     return 0;
