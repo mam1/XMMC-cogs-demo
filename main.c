@@ -9,18 +9,19 @@
  *		stopA  - stop the cog running cogA code
  *		stopB  - stop the cog running cogB code
  *		stopC  - stop the cog running cogC code
- *		statA  - send a message to the cog running the cogA code requesting status
- *		statB  - send a message to the cog running the cogB code requesting status
- *		statC  - send a message to the cog running the cogC code requesting status
- *		exit   - terminate application
+ *		queryA - set flag telling the cogA code to increment query counter for the cog
+ *		queryB - set flag telling the cogB code to increment query counter for the cog
+ *		queryC - set flag telling the cogC code to increment query counter for the cog
+ *		status - display the state of all cogs and counters
+ *      exit   - terminate application
  *		
- * The code loaded in to the cogs is identical except for the message 
- * returned when quired for status.
+ * The code loaded in to the cogs is identical.  On startup it zeros the 
+ * query counter then loops, checking shared memory for a flag requesting
+ * that the query counter be incremented. 
  * 
  */
 
 #include <stdio.h>
-#include <unistd.h>
 #include <propeller.h>
 #include "main.h"
 
@@ -57,73 +58,62 @@ char    *command[COMMANDS] = {
 /* 10 */    "exit"};
 
 /**************************** cog control routines ******************************/
-
 /* start cogA */
 int start_cogA(volatile void *parptr)
 { 
-    /* beginning and ending addresses of the code for the A cog */
-    extern unsigned int         _load_start_cogA_cog[];
-    extern unsigned int         _load_stop_cogA_cog[];
-
-    if(parA.A.cog != -1)
-        cogstop(parA.A.cog);  //stop the cog
-
+    extern unsigned int _load_start_cogA_cog[]; //start address for cog code
+    extern unsigned int _load_stop_cogA_cog[];  //end address for cog code 
+    if(parA.A.cog != -1)                        //see if the cog is running
+        cogstop(parA.A.cog);                    //stop the cog
     int size  = (_load_stop_cogA_cog - _load_start_cogA_cog)*4;	//code size in bytes
     printf("  cogA code size %i bytes - ",size);
-    unsigned int code[size];  				  //allocate enough HUB to hold the COG code
-    memcpy(code, _load_start_cogA_cog, size); //copy the code to HUB memory
-    parA.A.cog = cognew(code, parptr);        //start the cog
+    unsigned int code[size];  				    //allocate enough HUB to hold the COG code
+    memcpy(code, _load_start_cogA_cog, size);   //copy the code to HUB memory
+    parA.A.cog = cognew(code, parptr);          //start the cog
     return parA.A.cog;
 }
 
 /* start cogB */
 int start_cogB(volatile void *parptr)
 { 
-    /* beginning and ending addresses of the code for the B cog */
-    extern unsigned int         _load_start_cogB_cog[];
-    extern unsigned int         _load_stop_cogB_cog[]; 
-
-    if(parB.B.cog != -1)
-        cogstop(parB.B.cog);  //stop the cog
-
+    extern unsigned int  _load_start_cogB_cog[]; //start address for cog code
+    extern unsigned int  _load_stop_cogB_cog[];  //end address for cog code 
+    if(parB.B.cog != -1)                         //see if the cog is running
+        cogstop(parB.B.cog);                     //stop the cog
     int size  = (_load_stop_cogB_cog - _load_start_cogB_cog)*4; //code size in bytes    
     printf("  cogB code size %i bytes - ",size);
-    unsigned int code[size];                  //allocate enough HUB to hold the COG code
-    memcpy(code, _load_start_cogB_cog, size); //copy the code to HUB memory  
-    parB.B.cog = cognew(code, parptr);        //start the cog
+    unsigned int code[size];                     //allocate enough HUB to hold the COG code
+    memcpy(code, _load_start_cogB_cog, size);    //copy the code to HUB memory  
+    parB.B.cog = cognew(code, parptr);           //start the cog
     return parB.B.cog;
 }
 
 /* start cogC */
 int start_cogC(volatile void *parptr)
 { 
-    /* beginning and ending addresses of the code for the C cog */
-    extern unsigned int         _load_start_cogC_cog[];
-    extern unsigned int         _load_stop_cogC_cog[]; 
-
-    if(parC.C.cog != -1)
-        cogstop(parC.C.cog);  //stop the cog
-
+    extern unsigned int _load_start_cogC_cog[]; //start address for cog code
+    extern unsigned int _load_stop_cogC_cog[];  //end address for cog code  
+    if(parC.C.cog != -1)                        //see if the cog is running
+        cogstop(parC.C.cog);                    //stop the cog
     int size  = (_load_stop_cogC_cog - _load_start_cogC_cog)*4; //code size in bytes    
     printf("  cogC code size %i bytes - ",size);
-    unsigned int code[size];                  //allocate enough HUB to hold the COG code
-    memcpy(code, _load_start_cogC_cog, size); //copy the code to HUB memory 
-    parC.C.cog = cognew(code, parptr);        //start the cog
+    unsigned int code[size];                    //allocate enough HUB to hold the COG code
+    memcpy(code, _load_start_cogC_cog, size);   //copy the code to HUB memory 
+    parC.C.cog = cognew(code, parptr);          //start the cog
     return parC.C.cog;
 }
 
 /************************* command processor routines *************************/
+/* convert user input to command number */
 int process(char *input)
 {
     int         i;
-
-    for(i=0;i<COMMANDS;i++)
+    for(i=0;i<COMMANDS;i++)             //loop through the command list
     {
-        if(strcmp(input,command[i])==0)
-            return i;
+        if(strcmp(input,command[i])==0) //see if the user entered a valid command
+            return i;                   //return the command number
     }
-    return -1;
-
+    return -1;                          //user entered an invalid command
 }
 /****************************** start main routine ******************************/
 
@@ -141,13 +131,12 @@ int main(void)
     parB.B.cog = -1; 
     parC.C.cog = -1; 
 
-
 /* loop forever */
     while(1) 
     {
         printf("\nenter command > ");
         gets(input_buffer);
-        switch(process(input_buffer))
+        switch(process(input_buffer))   //test user input,take appropriate action
         {
             case 0: //startA
                 if(start_cogA(&parA.A)== -1)

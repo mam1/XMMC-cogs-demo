@@ -1,6 +1,7 @@
 /*
- * This code loops checking for a query request  
- * If it receives one it it updates its query counter
+ * This code zeros the cog query counter on startup.  It then
+ * loops checking for a increment request.  If it receives one 
+ * it reset the flag and increments the cog query counter  
 */
 
 #include <propeller.h>
@@ -19,5 +20,4 @@ void main (volatile CONTROL_BLOCK *cb)
         cb->query_ctr++;	//increment query counter
     }   
  }
-
 }
