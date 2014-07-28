@@ -154,8 +154,9 @@ int main(void)
     while(1) 
     {
         printf("\nenter command > ");
-        fgets(input_buffer,INPUT_BUFFER,stdin); //get a line of input
-        switch(process(input_buffer))           //test input,take appropriate action
+        fgets(input_buffer,INPUT_BUFFER,stdin);      //get a line of input
+        input_buffer[strlen(input_buffer)-1] = '\0'; //get rid of trailing new line character
+        switch(process(input_buffer))                //test input,take appropriate action
         {
             case 0:     //startA
                 if(start_cogA(&parA.A)== -1)
