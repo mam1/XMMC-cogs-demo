@@ -15,6 +15,6 @@ The xmmc process (main) is a simple command processor.  It can start, stop or di
 * status - display the status of all cogs and query counters
 * exit   - terminate application
 
-The code running on each cog is identical, however each cog has its own control block.  All communication with the cog is accomplished through the control block.  When a cog starts up it zeros the cog query counter and query flag both of which are located in shared memory (the cogs control block).  It then loops, checking its control block for a request to increment the query counter.  If it get one, it resets the flag then increments the query counter. Locks are not used to keep it simple.
+The code running on each cog is identical, however each cog has its own control block.  All communication with a cog is accomplished through its control block.  When a cog starts up it zeros the cog query counter and query flag both of which are located in shared memory (the cogs control block).  It then loops, checking its control block for a request to increment the query counter.  If it get one, it resets the flag then increments the query counter. Locks are not used to keep it simple.
 
 
