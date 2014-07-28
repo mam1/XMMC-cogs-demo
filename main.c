@@ -20,29 +20,24 @@
  * that the query counter be incremented. 
  * 
  */
-
 #include <stdio.h>
 #include <propeller.h>
 #include "main.h"
-
 /* allocate control block & stack for cogA */
 struct {
     unsigned            stack[STACK_A];
     CONTROL_BLOCK       A;
 } parA;
-
 /* allocate control block & stack for cogB */
 struct {
     unsigned            stack[STACK_B];
     CONTROL_BLOCK       B;
 } parB;
-
 /* allocate control block & stack for cogC */
 struct {
     unsigned            stack[STACK_C];
     CONTROL_BLOCK       C;
 } parC;
-
 /* command processor command list */
 char    *command[COMMANDS] = {
 /*  0 */    "startA",
@@ -56,7 +51,6 @@ char    *command[COMMANDS] = {
 /*  8 */    "queryC",
 /*  9 */    "status",
 /* 10 */    "exit"};
-
 /************************* command processor routines *************************/
 /* start cogA */
 int start_cogA(volatile void *parptr)
@@ -72,7 +66,6 @@ int start_cogA(volatile void *parptr)
     parA.A.cog = cognew(code, parptr);          //start the cog
     return parA.A.cog;
 }
-
 /* start cogB */
 int start_cogB(volatile void *parptr)
 { 
@@ -87,7 +80,6 @@ int start_cogB(volatile void *parptr)
     parB.B.cog = cognew(code, parptr);           //start the cog
     return parB.B.cog;
 }
-
 /* start cogC */
 int start_cogC(volatile void *parptr)
 { 
@@ -102,7 +94,6 @@ int start_cogC(volatile void *parptr)
     parC.C.cog = cognew(code, parptr);          //start the cog
     return parC.C.cog;
 }
-
 /* convert user input to command number */
 int process(char *input)
 {
@@ -114,7 +105,6 @@ int process(char *input)
     }
     return -1;                          //user entered an invalid command
 }
-
 /* display the status of all cogs and query counters */
 void status(void)
 {
@@ -135,27 +125,23 @@ void status(void)
         printf("running on cog %i, query count %i\n",parC.C.cog,parC.C.query_ctr);
     return;
 }
-
 /****************************** start main routine ******************************/
 int main(void)
 {
     char        input_buffer[INPUT_BUFFER]; //buffer for user input
-
-/* display startup message */
     waitcnt(500000 + _CNT);                 //wait until initialization is complete
-    printf("XMMC-cogc demo v%s",VERSION); 
-
+    printf("XMMC-cogc demo v%s",VERSION);   //display startup message  
 /* set all cogs to not running */
     parA.A.cog = -1; 
     parB.B.cog = -1; 
     parC.C.cog = -1; 
-
 /* loop forever */
     while(1) 
     {
-        printf("\nenter command > ");
-        fgets(input_buffer,INPUT_BUFFER,stdin); //get a line of input
-        switch(process(input_buffer))           //test input,take appropriate action
+        printf("\nenter command > ");                //prompt user
+        fgets(input_buffer,INPUT_BUFFER,stdin);      //get a line of input
+        input_buffer[strlen(input_buffer)-1] = '\0'; //get rid of trailing new line character
+        switch(process(input_buffer))                //test input,take appropriate action
         {
             case 0:     //startA
                 if(start_cogA(&parA.A)== -1)
