@@ -19,7 +19,7 @@
  * query counter then loops, checking shared memory for a flag requesting
  * that the query counter be incremented. 
  * 
- **/
+ */
 
 #include <stdio.h>
 #include <propeller.h>
