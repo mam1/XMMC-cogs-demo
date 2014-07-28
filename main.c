@@ -1,6 +1,6 @@
 /**
  * This is the main cog_test program file. It is a skeleton of an
- * application has a xmmc process which starts and stops processes
+ * application comprised of  a xmmc process which starts and stops processes
  * running on separate cogs.  The xmmc routine is a simple command
  * processor.  It supports the following commands:
  *		startA - load cogA code into a cog and start it
