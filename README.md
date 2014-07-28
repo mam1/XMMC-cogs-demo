@@ -1,6 +1,8 @@
 XMMC-cogs-demo
 ==============
-This an example of an application architecture that has 1 XMMC process that handles human interaction and 3 independent processes running on 3 separate cogs. The xmmc process is a simple command processor.  It can start, stop or dispaly status for any of three cogs.  It supports the following commands:
+This an example of an application architecture that has 1 XMMC process that handles human interaction and 3 independent processes running on 3 separate cogs. The code was tested on a Parallax C3.  
+
+The xmmc process (main) is a simple command processor.  It can start, stop or display status of code running on any of three cogs (cogA, cogB, cogC).  It supports the following commands:
 * startA - load cogA code into a cog and start it
 * startB - load cogB code into a cog and start it
 * startC - load cogC code into a cog and start it
@@ -13,6 +15,6 @@ This an example of an application architecture that has 1 XMMC process that hand
 * status - display the status of all cogs and query counters
 * exit   - terminate application
 
-The code loaded in to the cogs zeros the cog query counter then loops, checking its control block for a request to increment the query counter for the cog.  If it get one, it resets the flag then increments the query counter in its control block. 
+The code running on each cog is identical, however each cog has its own control block.  All communication with the cog is accomplished through the control block.  When a cog starts up it zeros the cog query counter and query flag both of which are located in shared memory (the cogs control block).  It then loops, checking its control block for a request to increment the query counter.  If it get one, it resets the flag then increments the query counter. Locks are not used to keep it simple.
 
 
