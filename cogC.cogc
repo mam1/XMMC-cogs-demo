@@ -2,7 +2,7 @@
  * This code zeros the cog query counter on startup.  It then
  * loops checking for a increment request.  If it receives one 
  * it reset the flag and increments the cog query counter  
-**/
+*/
 
 #include <propeller.h>
 #include "main.h"
