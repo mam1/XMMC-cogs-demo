@@ -143,7 +143,7 @@ int main(void)
 
 /* display startup message */
     waitcnt(500000 + _CNT);                 //wait until initialization is complete
-    printf("\nXMMC-cogs demo version 1.0\n"); 
+    printf("%s",VERSION); 
 
 /* set all cogs to not running */
     parA.A.cog = -1; 

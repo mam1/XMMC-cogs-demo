@@ -1,6 +1,8 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
+#define VERSION			"1.1" 			//version number
+
 #define STACK_A			30				//stack size for cog A
 #define STACK_B			30				//stack size for cog B
 #define STACK_C			30				//stack size for cog C

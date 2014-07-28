@@ -1,6 +1,6 @@
 XMMC-cogs-demo
 ==============
-This an example of an application architecture that has 1 XMMC process that handles human interaction and 3 independent processes running on 3 separate cogs. The code was tested on a Parallax C3.  
+This an example of an propgcc application architecture that has 1 XMMC process that handles human interaction and 3 independent processes running on 3 separate cogs. The code was tested on a Parallax C3.  
 
 The xmmc process (main) is a simple command processor.  It can start, stop or display status of code running on any of three cogs (cogA, cogB, cogC).  It supports the following commands:
 * startA - load cogA code into a cog and start it
