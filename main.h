@@ -14,7 +14,6 @@ typedef volatile struct
     int		query_flag;	//!= 0, requests a counter update
     int     query_ctr;	//number of times cog has been queried 
     int		cog;		//number of the cog the code is runing on  	
-
 } CONTROL_BLOCK;
 
 #endif
