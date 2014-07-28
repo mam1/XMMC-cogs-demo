@@ -19,7 +19,7 @@
  * query counter then loops, checking shared memory for a flag requesting
  * that the query counter be incremented. 
  * 
- */
+ **/
 
 #include <stdio.h>
 #include <propeller.h>
@@ -57,7 +57,7 @@ char    *command[COMMANDS] = {
 /*  9 */    "status",
 /* 10 */    "exit"};
 
-/**************************** cog control routines ******************************/
+/************************* command processor routines *************************/
 /* start cogA */
 int start_cogA(volatile void *parptr)
 { 
@@ -103,7 +103,6 @@ int start_cogC(volatile void *parptr)
     return parC.C.cog;
 }
 
-/************************* command processor routines *************************/
 /* convert user input to command number */
 int process(char *input)
 {
@@ -115,16 +114,36 @@ int process(char *input)
     }
     return -1;                          //user entered an invalid command
 }
-/****************************** start main routine ******************************/
 
+/* display the status of all cogs and query counters */
+void status(void)
+{
+    printf("  cog A is ");
+    if(parA.A.cog == -1)
+        printf("not running, query count %i\n",parA.A.query_ctr);
+    else
+        printf("running on cog %i, query count %i\n",parA.A.cog,parA.A.query_ctr);
+    printf("  cog B is ");
+    if(parB.B.cog == -1)
+        printf("not running, query count %i\n", parB.B.query_ctr);
+    else
+        printf("running on cog %i, query count %i\n",parB.B.cog,parB.B.query_ctr);
+    printf("  cog C is ");
+    if(parC.C.cog == -1)
+        printf("not running, query count %i\n",parC.C.query_ctr);
+    else
+        printf("running on cog %i, query count %i\n",parC.C.cog,parC.C.query_ctr);
+    return;
+}
+
+/****************************** start main routine ******************************/
 int main(void)
 {
-    char        input_buffer[INPUT_BUFFER];
-    // int         cmd_num;
+    char        input_buffer[INPUT_BUFFER]; //buffer for user input
 
 /* display startup message */
-    waitcnt(500000 + _CNT);              //wait until initialization is complete
-    printf("\nXMMC-cogs demo started\n"); 
+    waitcnt(500000 + _CNT);                 //wait until initialization is complete
+    printf("\nXMMC-cogs demo version 1.0\n"); 
 
 /* set all cogs to not running */
     parA.A.cog = -1; 
@@ -135,7 +154,7 @@ int main(void)
     while(1) 
     {
         printf("\nenter command > ");
-        gets(input_buffer);
+        fgets(input_buffer,INPUT_BUFFER,stdin);
         switch(process(input_buffer))   //test user input,take appropriate action
         {
             case 0: //startA
@@ -181,21 +200,7 @@ int main(void)
                 parC.C.query_flag = 1;
                 break;
             case 9: //status
-                printf("  cog A is ");
-                if(parA.A.cog == -1)
-                    printf("not running, query count %i\n",parA.A.query_ctr);
-                else
-                    printf("running on cog %i, query count %i\n",parA.A.cog,parA.A.query_ctr);
-                printf("  cog B is ");
-                if(parB.B.cog == -1)
-                    printf("not running, query count %i\n", parB.B.query_ctr);
-                else
-                    printf("running on cog %i, query count %i\n",parB.B.cog,parB.B.query_ctr);
-                printf("  cog C is ");
-                if(parC.C.cog == -1)
-                    printf("not running, query count %i\n",parC.C.query_ctr);
-                else
-                    printf("running on cog %i, query count %i\n",parC.C.cog,parC.C.query_ctr);
+                status();
                 break;
             case 10:    //exit
                 printf("exiting program\n");
@@ -204,7 +209,6 @@ int main(void)
                 printf("<%s> is not a valid command\n",input_buffer);
 
         }
-
     }
     return 0;
 }
