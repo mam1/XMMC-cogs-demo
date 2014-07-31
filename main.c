@@ -177,13 +177,22 @@ int main(void)
                 parC.C.cog = -1;
                 break;
             case 6:     //queryA
-                parA.A.query_flag = 1;
+                if(parA.A.cog == -1)
+                    printf("cog A is not running\n");              
+                else
+                    parA.A.query_flag = 1;
                 break;
             case 7:     //queryB
-                parB.B.query_flag = 1;
+                if(parB.B.cog == -1)
+                    printf("cog B is not running\n");              
+                else
+                    parB.B.query_flag = 1;
                 break;
             case 8:     //queryC
-                parC.C.query_flag = 1;
+                if(parC.C.cog == -1)
+                    printf("cog C is not running\n");              
+                else
+                    parC.C.query_flag = 1;
                 break;
             case 9:     //status
                 status();
