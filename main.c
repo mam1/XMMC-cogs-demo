@@ -51,6 +51,9 @@ char    *command[COMMANDS] = {
 /*  8 */    "queryC",
 /*  9 */    "status",
 /* 10 */    "exit"};
+
+
+
 /************************* command processor routines *************************/
 /* start cogA */
 int start_cogA(volatile void *parptr)
