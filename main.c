@@ -52,6 +52,15 @@ char    *command[COMMANDS] = {
 /*  9 */    "status",
 /* 10 */    "exit"};
 
+/* action routine definition */
+typedef int(*ACTION_PTR)(int, int *,char *, CONTROL_BLOCK *); 
+
+#define KEYWORDS    200
+#define STATES      20
+
+char            *keyword[KEYWORDS];
+int             state[STATES];
+ACTION_PTR      action[KEYWORDS][STATES];
 
 
 /************************* command processor routines *************************/

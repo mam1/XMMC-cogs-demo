@@ -124,7 +124,7 @@ run: $(NAME).elf
 	$(LOADER) $(BOARDFLAG) $(NAME).elf -r -t
 
 runit: $(NAME).elf
-	$(LOADER) $(BOARDFLAG) $(NAME).elf -r -t -p /dev/cu.usbserial-004213FA
+	$(LOADER) $(BOARDFLAG) $(NAME).elf -r -t -p /dev/cu.usbserial-004213FA 
 
 run2: $(NAME).elf
 	$(LOADER2) $(NAME).elf -t

@@ -4,6 +4,7 @@ PROPLIB = common
 
 #CFLAGS = -Os -xmmc
 CFLAGS = -Os
+CFLAGSP = -Os -Wall
 NM = propeller-elf-nm
 MODEL = xmmc
 BOARD = C3F
