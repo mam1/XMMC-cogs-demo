@@ -23,6 +23,10 @@
 #include <stdio.h>
 #include <propeller.h>
 #include "main.h"
+
+#include <stdlib.h>
+#include <i2c.h>
+
 /* allocate control block & stack for cogA */
 struct {
     unsigned            stack[STACK_A];
@@ -128,12 +132,117 @@ void status(void)
         printf("running on cog %i, query count %i\n",parC.C.cog,parC.C.query_ctr);
     return;
 }
+
+
+
+static I2C_COGDRIVER i2c;
+static I2C* pI2c;
+static int scl = 28;
+static int sda = 29;
+
+#define EEPROM_ADDR 0xA0
+
+void chk(char *fcn, int sts)
+{
+    if (sts != 0) {
+        printf("%s failed: %d\n", fcn, sts);
+    exit(1);
+    }
+}
+
+int EEPROM_Init()
+{
+     pI2c = i2cOpen(&i2c, scl, sda, 400000);
+     if ( pI2c == 0 ) {
+         return -1;
+     }
+     return 0;
+}
+
+uint8_t EEPROM_ReadByte(int addr)
+{
+     uint8_t  data[2] = { addr >> 8, addr & 0xFF };
+     uint8_t  value;
+     chk("i2cWrite", i2cWrite(pI2c, EEPROM_ADDR, data, 2, 0));
+     chk("i2cRead", i2cRead(pI2c, EEPROM_ADDR, &value, 1, 1)); 
+     return value;
+}
+
+void EEPROM_WriteByte(int addr, uint8_t value)
+{
+     uint8_t  data[3] = { addr >> 8, addr & 0xFF, value };
+     chk("i2cWrite", i2cWrite(pI2c, EEPROM_ADDR, data, 3, 1));
+}
+
+uint8_t show_byte(int addr)
+{
+    uint8_t byte = EEPROM_ReadByte(addr);
+    printf("[%04x]: %02x\n", addr, byte);
+    return byte;
+}
+
+uint32_t key_calc(int c,int d,int h,int m)
+{
+    return (c*7*24*60)+(d*24*60)+(h*60)+m;
+}
+
+uint32_t sch_addr(int c, int d)
+{
+    char        *s;
+
+    s = (char *)(0x8000 +((c*(d-1)+d)*SCHEDULE_BYTES));
+    if((int)s >= 0x10000)
+        printf("big trouble\n");
+    // uint8_t  data[2] = { s >> 8, addr & 0xFF };
+    return (uint32_t)s;
+}
+
+int EEPROM_ReadSchedule(int c,int d,uint32_t *s)
+{
+     // uint8_t  data[2] = { addr >> 8, addr & 0xFF };
+     uint8_t  value;
+     // chk("i2cWrite", i2cWrite(pI2c, EEPROM_ADDR, data, 2, 0));
+     // chk("i2cRead", i2cRead(pI2c, EEPROM_ADDR, &value, 1, 1)); 
+     return value;
+}
+
+int EEPROM_WriteSchedule(uint32_t *s)
+{
+    // uint8_t  data[3] = { addr >> 8, addr & 0xFF, value };
+    // chk("i2cWrite", i2cWrite(pI2c, EEPROM_ADDR, data, 3, 1)); 
+    return 0;  
+}
 /****************************** start main routine ******************************/
 int main(void)
 {
     char        input_buffer[INPUT_BUFFER]; //buffer for user input
     waitcnt(500000 + _CNT);                 //wait until initialization is complete
-    printf("XMMC-cogc demo v%s",VERSION);   //display startup message  
+    printf("XMMC-cogc demo v%s\n\n",VERSION);   //display startup message 
+
+    printf("%i channels per day, %i days per week, %i schedules\n%i records per schedule, 4 bytes per record, %i bytes per schedule\n",CHANNELS,DAYS_PER_WEEK,SCHEDULES,SCHEDULE_RECORDS,SCHEDULE_BYTES);
+    printf("schedule array %i bytes\n\n",SCHEDULE_BYTES * SCHEDULES);
+
+    int         c,d,ii;
+    uint32_t    a = 0x8000;
+
+    ii=0;
+
+    for(c=0;c<CHANNELS;c++)
+        for(d=1;d<DAYS_PER_WEEK+1;d++)
+        {
+            if((sch_addr(c,d)-a) != 44)
+                printf("*************\n");
+            a = sch_addr(c,d);
+
+            printf("%i - c=%i d=%i  address = %x\n",ii++,c,d,sch_addr(c,d));
+        }
+
+
+
+
+
+
+
 /* set all cogs to not running */
     parA.A.cog = -1; 
     parB.B.cog = -1; 
