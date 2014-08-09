@@ -13,7 +13,7 @@ BOARD = C3F
 #
 
 NAME = main
-OBJS = main.o cogA.cog cogB.cog cogC.cog
+OBJS = main.o schedule.o cogA.cog cogB.cog cogC.cog
 
 all: $(NAME).elf
 

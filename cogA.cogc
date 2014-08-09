@@ -8,7 +8,7 @@
 #include "main.h"
 
 _NAKED
-void main (volatile CONTROL_BLOCK *cb)
+void main (volatile CONTROL_BLOCK_A *cb)
 { 
  cb->query_ctr = 0;			//zero the query counter 
  cb->query_flag = 0;		//reset query flag 
