@@ -121,6 +121,7 @@ void chk(char *fcn, int sts)
     exit(1);
     }
 }
+/************************************* schedule routines ***************************************/
 /* get schedule - copy eeprom to buffer */
 char *get_sch(char *buffer,int day,int channel,int eeprom_page)
 {
@@ -134,6 +135,7 @@ char *get_sch(char *buffer,int day,int channel,int eeprom_page)
   printf("  day %i, channel %i, page %i, copied from eeprom starting at %x to buffer\n",day,channel,eeprom_page,eeprom_addr);  
   return buffer;
 }
+
 /* put schedule - copy buffer to eeprom  */
 void put_sch(char *buffer,int day,int channel,int eeprom_page)
 {
@@ -146,6 +148,13 @@ void put_sch(char *buffer,int day,int channel,int eeprom_page)
   printf("  day %i, channel %i, page %i, copied from buffer to eeprom starting at %x\n",day,channel,eeprom_page,eeprom_addr);  
   return;
 }
+
+
+
+
+
+
+/********************************* schedule buffer routines *************************************/
 /* load schedule buffer from high eeprom */
 int load_sch_buf(int day)
 {
@@ -157,6 +166,10 @@ int load_sch_buf(int day)
   chk("i2cWrite", i2cWrite(pI2c, EEPROM_ADDR, parB.B.eeprom_addr, sizeof(parB.B.schedule_buffer), 1));         
   printf("  day %i,channel %i, page %i, copied to eeprom starting at %x\n",day,eeprom_addr);
 }
+
+
+
+/********************************* schedule file routines *************************************/
 /* copy schedules from a file on the sd card to high eeprom */
 int cpy_sch_2_eeprom(char *file_name,int eeprom_page)
 {

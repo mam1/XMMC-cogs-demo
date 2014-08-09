@@ -25,7 +25,12 @@
 #include "main.h"
 #include "schedule.h"
 
-
+extern struct
+{
+  uint8_t       b0;
+  uint8_t       b1;
+  uint8_t       buf[SCHEDULE_BYTES];
+} record_buffer;
 
 /* allocate control block & stack for cogA */
 struct {
@@ -286,24 +291,24 @@ int main(void)
                 printf("<");
                 for(i=0;i<20;i++)
                 {
-                    putc(sb[i],stdout);
-                    sb[i] = ' ';
+                    putc(record_buffer.buf[i],stdout);
+                    record_buffer.buf[i] = ' ';
                 }
                 printf(">");
                 break;
             case 16: //gets
-                printf("buffer before <%s>\n",sb);
-                get_sch(sb,1,1,1); 
-                printf("buffer after <%s>\n",sb);
+                printf("buffer before <%s>\n",record_buffer.buf);
+                get_sch(record_buffer.buf,1,1,1); 
+                printf("buffer after <%s>\n",record_buffer.buf);
                 break;
             case 17: //puts
                 printf("enter string >");
                 fgets(input_buffer,INPUT_BUFFER,stdin);      //get a line of input
                 input_buffer[strlen(input_buffer)-1] = '\0'; //get rid of trailing new line character
-                printf("buffer before <%s>\n",sb);
-                strcpy(sb,input_buffer); 
-                printf("buffer after <%s>\n",sb);
-                put_sch(sb,1,1,1); 
+                printf("buffer before <%s>\n",record_buffer.buf);
+                strcpy(record_buffer.buf ,input_buffer); 
+                printf("buffer after <%s>\n",record_buffer.buf);
+                put_sch(record_buffer.buf,1,1,1); 
                 break;
             default:
                 printf("<%s> is not a valid command\n",input_buffer);
