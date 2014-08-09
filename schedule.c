@@ -10,6 +10,7 @@
 #include <i2c.h>
 #include "schedule.h"
 #include "main.h"
+#include "bitlit.h"
 
 /*************************** drivers  ********************************/
 extern _Driver _FullDuplexSerialDriver;
@@ -26,94 +27,24 @@ static I2C* pI2c;
 static int scl = 28;
 static int sda = 29;
 
-struct
+struct 
 {
   uint8_t       b0;
   uint8_t       b1;
   uint8_t       buf[SCHEDULE_BYTES];
 } record_buffer;
 
-uint32_t            *srec;
+uint32_t       state_mask = B32(10000000,00000000,00000000,00000000);
+uint32_t       key_mask   = B32(01111111,11111111,11111111,11111111);
+
+
 /* control block & stack for cogB */
 extern struct {
     unsigned            stack[STACK_B];
     CONTROL_BLOCK_B       B;
 } parB;
 
-
-#define EEPROM_ADDR 0xA0
-
-/*
-
-
-uint8_t EEPROM_ReadByte(int addr)
-{
-     uint8_t  data[2] = { addr >> 8, addr & 0xFF };
-     uint8_t  value;
-     chk("i2cWrite", i2cWrite(pI2c, EEPROM_ADDR, data, 2, 0));
-     chk("i2cRead", i2cRead(pI2c, EEPROM_ADDR, &value, 1, 1)); 
-     return value;
-}
-
-void EEPROM_WriteByte(int addr, uint8_t value)
-{
-     uint8_t  data[3] = { addr >> 8, addr & 0xFF, value };
-     // chk("i2cWrite", i2cWrite(pI2c, EEPROM_ADDR, 3, 1));
-}
-
-void EEPROM_WriteBuffer(int addr, uint8_t value)
-{
-     uint8_t  data[3] = { addr >> 8, addr & 0xFF, value };
-     chk("i2cWrite", i2cWrite(pI2c, EEPROM_ADDR, data, 3, 1));
-}
-uint8_t show_byte(int addr)
-{
-    uint8_t byte = EEPROM_ReadByte(addr);
-    printf("[%04x]: %02x\n", addr, byte);
-    return byte;
-}
-
-uint32_t key_calc(int c,int d,int h,int m)
-{
-    return (c*7*24*60)+(d*24*60)+(h*60)+m;
-}
-
-
-
-int EEPROM_ReadSchedule(int c,int d,uint32_t *s)
-{
-     // uint8_t  data[2] = { addr >> 8, addr & 0xFF };
-     uint8_t  value;
-     // chk("i2cWrite", i2cWrite(pI2c, EEPROM_ADDR, data, 2, 0));
-     // chk("i2cRead", i2cRead(pI2c, EEPROM_ADDR, &value, 1, 1)); 
-     return value;
-}
-
-int EEPROM_WriteSchedule(uint32_t *s)
-{
-    // uint8_t  data[3] = { addr >> 8, addr & 0xFF, value };
-    // chk("i2cWrite", i2cWrite(pI2c, EEPROM_ADDR, data, 3, 1)); 
-    return 0;  
-}
-
-int sd2eeprom(FILE *f, uint32_t *b)
-{
-	int 		eeprom_addr,i;
-	printf("sd2eeprom called\n");
-  eeprom_addr = _HIGH_EEPROM;
-
-	for(i=0;i<_DAYS_PER_WEEK;i++)
-	{
-		// fread()
-		// EEPROM_WriteSchedule(_ACTIVE, );
-	}
-	return;
-}
-*/
-/*********************************************************************************/
-/*********************************************************************************/
-/*********************************************************************************/
-
+/* abort with a message on -1 return code */
 void chk(char *fcn, int sts)
 {
     if (sts != 0) {
@@ -302,3 +233,133 @@ int init_sch(char *file_name)
   printf("  eeprom loaded\n");
   return 0;
 }
+
+/********************************* schedule record routines *************************************/
+int get_key(uint32_t b)    // extract key from a schedule record 
+ {
+    uint32_t     k;
+    k = (int)(b & key_mask);
+    return (int)k;
+ }
+
+int get_s(uint32_t b) // extract state from a schedule record 
+ {
+    if (b & state_mask)
+        return 1;
+    return 0;
+ }
+
+void put_key(volatile uint32_t *value,int key)   // load key into a schedule record 
+ {
+    int         hold_state;
+    uint32_t    t;
+
+    hold_state = get_s(*value);
+    t=(uint32_t)key;
+    if(*value & state_mask) t |= state_mask;
+    *value = key;
+    put_state(value,hold_state);
+    return;
+ }
+
+void put_state(volatile uint32_t *b,int s)  // load state into a schedule record
+ {
+    // printf("setting state to %i\n",s);
+    if(s) *b |= state_mask; 
+    else  *b &= ~state_mask;
+    return;
+ } 
+
+int add_sch_rec(uint32_t *sch, int k, int s)  // add or change a schedule record */
+ {
+    uint32_t       *end, *r;
+
+    /* schedule has no records - insert one */
+    if((int)*sch==0)
+    {
+        *sch++ = 1;
+        put_state(sch,s);
+        put_key(sch,k);
+        return 0;
+    }
+    /* see if there is room to add another record */
+    if((int)*sch >= _MAX_SCHEDULE_RECS)
+    {
+        printf("*** too many schedule records\n");
+        return 1;
+    }
+    /* if record exists change it */
+    r=find_schedule_record(sch,k);
+    if (r)
+    {
+        put_state(r,s);
+        return 0;
+    }
+    /* insert new record in ordered list */
+    *sch += 1;                  //increase record count
+    end = (sch + *sch) - 1;   //set pointer to end of the list
+    sch++;
+    printf("\n\n");
+    while(sch <= end)
+    {
+        if(k < get_key(*sch))
+            break; 
+        sch++;      
+    } 
+    while(end >= sch)
+        *(end+1) = *end--;
+    put_state(sch,s);
+    put_key(sch,k);
+    return 0;      
+ }
+
+int del_sch_rec(uint32_t *sch, int k)    // delete a schedule record with matching key 
+{
+    uint32_t            *rsize;
+    int              i,hit;
+
+    if(*sch==0)
+        return 0;
+    if(*sch==1)
+    {
+        *sch = 0;
+        return 0;
+    }
+
+    hit = 0;
+    rsize = sch++;
+
+    for(i=0;i<*rsize;i++)
+    {
+        if((k==get_key(*sch)) || (hit==1))
+        {
+            hit = 1;
+            *sch = *(sch+1);   
+        }    
+        sch++;
+    }
+
+    if(hit)
+    {
+        *rsize -= 1;
+        return 0;
+    }     
+    return 1;
+}
+
+
+
+uint32_t *find_schedule_record(uint32_t *sch,int k)  // search schedule for record with key match, return pointer to record or NULL 
+ {
+    int                              i, rsize;
+    
+    rsize = (int)*sch++;
+    for(i=0;i<rsize;i++)
+    {
+        if(k==get_key(*sch))
+            return sch;
+        sch++;
+    }
+    return NULL;
+ }
+
