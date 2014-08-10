@@ -13,7 +13,7 @@ BOARD = C3F
 #
 
 NAME = main
-OBJS = main.o schedule.o cogA.cog cogB.cog cogC.cog
+OBJS = main.o schedule.o cogA.cog cogB.cog cogC.cog rtc.cog
 
 all: $(NAME).elf
 
@@ -32,7 +32,7 @@ cogA.o: rtm_rmon.c
 cogB.o: rtm_tmon.c
 	$(CC) -r -Os -mcog -o $@ $<
 
-rcogC.o: rtm_tmon.c
+cogC.o: rtm_tmon.c
 	$(CC) -r -Os -mcog -o $@ $<
     
 #
