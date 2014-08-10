@@ -1,3 +1,4 @@
+
 /****************************************************************/
 /*                                                              */
 /*  rtc.cogc -  version 2.0                                     */
@@ -130,28 +131,40 @@ void comm_init(void)
 /* loop forever updating the time and date in the control block */
 _NAKED
 void main (volatile RTC_CB *m)
-{ 
+{
+    uint8_t                 hold_day;
+    uint8_t                 hold_sec; 
     i2cOpen(_rtcDataPin,_rtcClockPin);  //set up the i2c bus
     comm_init();                        //initialize DS3231 communication interface
     while(1){                           //loop forever
         while(lockset(m->tdb_lock));    //wait until we can set the lock
         i2cStart();                     //generate an i2c start condition
         if(i2cwrite(DS3231_Write_addr)) //setup to read
-            m->abt = 1;					//set abort flag
+            m->abt = 1;                 //set abort flag
         if(i2cwrite(0))                 //point at start of data registers
-            m->abt = 2;					//set abort flag
+            m->abt = 2;                 //set abort flag
         i2cStop();                      //generate an i2c stop condition
         i2cStart();                     //generate an i2c start condition
         if(i2cwrite(DS3231_Read_addr))  //read the DS33231 data registers
             m->abt = 3;
-        m->td_buffer.sec =   bcd_to_decimal(i2cread(ACK));
-        m->td_buffer.min =   bcd_to_decimal(i2cread(ACK));
-        m->td_buffer.hour =  bcd_to_decimal(i2cread(ACK));
-        m->td_buffer.dow =   bcd_to_decimal(i2cread(ACK));
-        m->td_buffer.day =   bcd_to_decimal(i2cread(ACK));
-        m->td_buffer.month = bcd_to_decimal(i2cread(ACK));
-        m->td_buffer.year =  bcd_to_decimal(i2cread(NACK));
+        m->sec =   bcd_to_decimal(i2cread(ACK));
+        m->min =   bcd_to_decimal(i2cread(ACK));
+        m->hour =  bcd_to_decimal(i2cread(ACK));
+        m->dow =   bcd_to_decimal(i2cread(ACK));
+        m->day =   bcd_to_decimal(i2cread(ACK));
+        m->month = bcd_to_decimal(i2cread(ACK));
+        m->year =  bcd_to_decimal(i2cread(NACK));
         i2cStop();                      //generate an i2c stop condition
+        if(hold_day != m->day)
+        {   
+            hold_day = m->day;
+            m->update_day = 0;
+        }
+        if(hold_sec != m->sec)
+        {
+            hold_sec = m->sec;
+            m->update_sec = 0;
+        }
         lockclr(m->tdb_lock);           //clear the lock
         waitcnt(*(int*)0 + CNT);
     };

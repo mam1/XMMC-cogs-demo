@@ -1,3 +1,4 @@
+
 /**************************************/
 /*  rtc.h -                           */
 /*  header file for rtc.cogc          */ 
@@ -5,6 +6,9 @@
 
 #ifndef _RTC_H_
 #define _RTC_H_
+
+#define _rtcClockPin    28              //i2c - DS3231 clock
+#define _rtcDataPin     29              //i2c - DS3231 data
 
 /* set i2c high by allowing the pin to float high, set low by forcing it low */
 #define i2c_float_scl_high  DIRA &= ~(1<<scl)
@@ -19,15 +23,22 @@
 #define ACK                         0
 #define NACK                        1
 
-/* rtc cog control block */
+/* rtc cog control block definitions */
+
 typedef volatile struct 
 {
-    int                 tdb_lock;   //lock ID for time date buffer
-    int                 abt;        //!= 0 cog requests a system abort,value = error code
-    int                 update;     //trigger update flag, 1=wait, 0=update 
-    int                 new_day;
-    int                 new_second;
-    TD_BUF              td_buffer;  //time, date & dow stored as uint8_t 
+    int                 	tdb_lock;   	//lock ID for time date buffer
+    uint8_t                 cog;            //cog ID of the cog the rtc.cog code is running on, -1 = not running
+    uint8_t                 abt;        	//!= 0 cog requests a system abort,value = error code
+    uint8_t                 update_sec;     //trigger update, 1=wait, 0=update 
+    uint8_t                 update_day; 	//trigger update, 1=wait, 0=update 
+    uint8_t     			sec;
+    uint8_t     			min;
+    uint8_t     			hour;
+    uint8_t     			day;
+    uint8_t     			month;
+    uint8_t     			year;
+    uint8_t     			dow;
 }RTC_CB;
     
 #endif // _RTC_H_
