@@ -24,6 +24,7 @@
 #include <propeller.h>
 #include "main.h"
 #include "schedule.h"
+#include "rtc.h"
 
 extern struct
 {
@@ -66,8 +67,36 @@ char    *command[COMMANDS] = {
 /* 14 */    "in",
 /* 15 */    "disp",
 /* 16 */    "gets",
-/* 17 */    "puts"};
+/* 17 */    "puts",
+/* 18 */    "time"};
 
+/***************** global code to text conversion ********************/
+char *day_names_long[7] = {
+     "Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"};
+char *day_names_short[7] = {"Sun","Mon","Tue","Wed","Thu","Fri","Sat"};
+char *onoff[2] = {"off"," on"};
+char *con_mode[3] = {"manual","  time","time & sensor"};
+char *sch_mode[2] = {"day","week"};
+/**************** real time clock cog stuff **************************/
+
+/* allocate control block & stack for rtc cog */
+struct {
+    unsigned stack[_STACK_SIZE_RTC];
+    volatile RTC_CB rtc;
+} rtc_cb;
+
+/* start rtc cog */
+int start_rtc(volatile void *parptr)
+{
+    
+    extern unsigned int _load_start_rtc_cog[];  // beginning addresses of the code for the rtc cog */
+    extern unsigned int _load_stop_rtc_cog[];   // ending addresses of the code for the rtc cog */  
+    int size = (_load_stop_rtc_cog - _load_start_rtc_cog)*4;//code size in bytes
+    printf("  rtc cog code size %i bytes\n",size);
+    unsigned int code[size];  //allocate enough HUB to hold the COG code
+    memcpy(code, _load_start_rtc_cog, size); //assume xmmc
+    return cognew(code, parptr);
+}
 
 
 /************************* command processor routines *************************/
@@ -189,6 +218,18 @@ int main(void)
     printf("schedule array %i bytes\n\n",SCHEDULE_BYTES * SCHEDULES);
     printf("size of working schedule buffer %i bytes, %i ints\n",sizeof(parB.B.schedule_buffer),sizeof(parB.B.schedule_buffer)/4);
 
+    /* start monitoring the real time clock DS3231 */
+    int         cog;
+    rtc_cb.rtc.tdb_lock = locknew();
+    lockclr(rtc_cb.rtc.tdb_lock);
+    cog = start_rtc(&rtc_cb.rtc);
+    if(cog == -1)
+    {
+        printf("** error attempting to start rtc cog\n  cognew returned %i\n\n",cog);
+        return 1;
+    }     
+    printf("  DS3231 monitored by code running on cog %i\n",cog);
+
 /* set all cogs to not running */
     parA.A.cog = -1; 
     parB.B.cog = -1; 
@@ -309,6 +350,17 @@ int main(void)
                 strcpy(record_buffer.buf ,input_buffer); 
                 printf("buffer after <%s>\n",record_buffer.buf);
                 put_sch(record_buffer.buf,1,1,1); 
+                break;
+            case 18:    //time
+                printf("%s, %i:%02i:%02i  %i/%i/%i\n\n",
+                    day_names_long[rtc_cb.rtc.dow-1],
+                    rtc_cb.rtc.hour,
+                    rtc_cb.rtc.min,
+                    rtc_cb.rtc.sec,
+
+                    rtc_cb.rtc.month,
+                    rtc_cb.rtc.day,
+                    rtc_cb.rtc.year+2000);
                 break;
             default:
                 printf("<%s> is not a valid command\n",input_buffer);

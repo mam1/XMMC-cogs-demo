@@ -6,9 +6,10 @@
 #define STACK_A				30						//stack size for cog A
 #define STACK_B				30						//stack size for cog B
 #define STACK_C				30						//stack size for cog C
+#define _STACK_SIZE_RTC     30
 
 #define INPUT_BUFFER		128						//input buffer size
-#define COMMANDS			18						//number of commands
+#define COMMANDS			19						//number of commands
 #define CHANNELS 			8
 #define _DAYS_PER_WEEK 		7
 #define SCHEDULES 			_DAYS_PER_WEEK * CHANNELS
