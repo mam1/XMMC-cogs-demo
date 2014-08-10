@@ -6,6 +6,8 @@
 #define STACK_A			30				//stack size for cog A
 #define STACK_B			30				//stack size for cog B
 #define STACK_C			30				//stack size for cog C
+#define _STACK_SIZE_RTC		30				//stack size for rtc cog
+
 
 #define INPUT_BUFFER	128				//input buffer size
 #define COMMANDS		11				//number of commands 

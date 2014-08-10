@@ -7,7 +7,7 @@ BOARD = C3F
 
 # objects for this program
 NAME = main
-OBJS = main.o cogA.cog cogB.cog cogC.cog
+OBJS = main.o cogA.cog cogB.cog cogC.cog rtc.cog
 
 all: $(NAME).elf
 

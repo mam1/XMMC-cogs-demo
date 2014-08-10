@@ -23,21 +23,47 @@
 #include <stdio.h>
 #include <propeller.h>
 #include "main.h"
-/* allocate control block & stack for cogA */
+#include "rtc.h"
+/* allocate control block & stack for cogA.cogc */
 struct {
     unsigned            stack[STACK_A];
     CONTROL_BLOCK       A;
 } parA;
-/* allocate control block & stack for cogB */
+/* allocate control block & stack for cogB.cogc */
 struct {
     unsigned            stack[STACK_B];
     CONTROL_BLOCK       B;
 } parB;
-/* allocate control block & stack for cogC */
+/* allocate control block & stack for cogC.cogc */
 struct {
     unsigned            stack[STACK_C];
     CONTROL_BLOCK       C;
 } parC;
+
+
+/**************** real time clock cog stuff **************************/
+
+/* allocate control block & stack for rtc cog */
+struct {
+    unsigned stack[_STACK_SIZE_RTC];
+    volatile RTC_CB rtc;
+} rtc_cb;
+
+/* start rtc cog */
+int start_rtc(volatile void *parptr)
+{
+    
+    extern unsigned int _load_start_rtc_cog[];  // beginning addresses of the code for the rtc cog */
+    extern unsigned int _load_stop_rtc_cog[];   // ending addresses of the code for the rtc cog */  
+    int size = (_load_stop_rtc_cog - _load_start_rtc_cog)*4;//code size in bytes
+    printf("  rtc cog code size %i bytes\n",size);
+    unsigned int code[size];  //allocate enough HUB to hold the COG code
+    memcpy(code, _load_start_rtc_cog, size); //assume xmmc
+    return cognew(code, parptr);
+}
+
+
+
 /* command processor command list */
 char    *command[COMMANDS] = {
 /*  0 */    "startA",
@@ -134,6 +160,20 @@ int main(void)
     char        input_buffer[INPUT_BUFFER]; //buffer for user input
     waitcnt(500000 + _CNT);                 //wait until initialization is complete
     printf("XMMC-cogc demo v%s",VERSION);   //display startup message  
+
+/* start monitoring the real time clock DS3231 */
+    int         cog;
+    rtc_cb.rtc.tdb_lock = locknew();
+    lockclr(rtc_cb.rtc.tdb_lock);
+    cog = start_rtc(&rtc_cb.rtc);
+    if(cog == -1)
+    {
+        printf("** error attempting to start rtc cog\n  cognew returned %i\n\n",cog);
+        return 1;
+    }     
+    printf("  DS3231 monitored by code running on cog %i\n",cog);
+
+
 /* set all cogs to not running */
     parA.A.cog = -1; 
     parB.B.cog = -1; 
