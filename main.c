@@ -40,7 +40,13 @@ struct {
     CONTROL_BLOCK       C;
 } parC;
 
-
+/***************** global code to text conversion ********************/
+char *day_names_long[7] = {
+     "Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"};
+char *day_names_short[7] = {"Sun","Mon","Tue","Wed","Thu","Fri","Sat"};
+char *onoff[2] = {"off"," on"};
+char *con_mode[3] = {"manual","  time","time & sensor"};
+char *sch_mode[2] = {"day","week"};
 /**************** real time clock cog stuff **************************/
 
 /* allocate control block & stack for rtc cog */
@@ -76,7 +82,8 @@ char    *command[COMMANDS] = {
 /*  7 */    "queryB",
 /*  8 */    "queryC",
 /*  9 */    "status",
-/* 10 */    "exit"};
+/* 10 */    "exit",
+/* 11 */    "time"};
 
 
 
@@ -243,6 +250,17 @@ int main(void)
             case 10:    //exit
                 printf("exiting program\n");
                 return 0;
+            case 11:    //time
+                printf("%s, %i:%02i:%02i  %i/%i/%i\n\n",
+                    day_names_long[rtc_cb.rtc.dow-1],
+                    rtc_cb.rtc.hour,
+                    rtc_cb.rtc.min,
+                    rtc_cb.rtc.sec,
+
+                    rtc_cb.rtc.month,
+                    rtc_cb.rtc.day,
+                    rtc_cb.rtc.year+2000);
+                break;
             default:
                 printf("<%s> is not a valid command\n",input_buffer);
 
