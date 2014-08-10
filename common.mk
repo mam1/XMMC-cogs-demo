@@ -123,7 +123,7 @@ clean:
 run: $(NAME).elf
 	$(LOADER) $(BOARDFLAG) $(NAME).elf -r -t
 
-runit: $(NAME).elf
+r: $(NAME).elf
 	$(LOADER) $(BOARDFLAG) $(NAME).elf -r -t -p /dev/cu.usbserial-004213FA
 
 run2: $(NAME).elf
