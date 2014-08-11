@@ -126,17 +126,43 @@ void comm_init(void)
     }       
     while((INA & sda_mask)==0);     //if the DS3231 is holding sda low, try again 
 }
+_NATIVE
+void set(void)
+{
+    return;
+}
 /********************** start main routine ************************/
 /* loop forever updating the time and date in the control block */
 _NAKED
 void main (volatile RTC_CB *m)
 {
     uint8_t                 hold_day;
-    uint8_t                 hold_sec; 
+    uint8_t                 hold_sec;
+    uint8_t                 i; 
+
     i2cOpen(_rtcDataPin,_rtcClockPin);  //set up the i2c bus
     comm_init();                        //initialize DS3231 communication interface
     while(1){                           //loop forever
         while(lockset(m->tdb_lock));    //wait until we can set the lock
+        if(m->set != 0)
+        {
+            i2cStart();                     //generate an i2c start condition
+            if(i2cwrite(DS3231_Write_addr)) //setup to read
+                m->abt = 1;                 //set abort flag
+            if(i2cwrite(0))                 //point at start of data registers
+                m->abt = 2;                 //set abort flag
+            // i2cStop();                      //generate an i2c stop condition
+            // i2cStart();                     //generate an i2c start condition
+            // if(i2cwrite(DS3231_Read_addr))  //read the DS33231 data registers
+                // m->abt = 3;
+            for(i=0;i<7;i++) 
+            {
+                i2cwrite(m->set_data[i]);
+                m->set_data[i] = 0;
+            }
+            i2cStop();                      //generate an i2c stop condition
+            m->set = 0;
+        }
         i2cStart();                     //generate an i2c start condition
         if(i2cwrite(DS3231_Write_addr)) //setup to read
             m->abt = 1;					//set abort flag

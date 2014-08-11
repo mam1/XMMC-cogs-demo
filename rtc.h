@@ -26,17 +26,19 @@
 
 typedef volatile struct 
 {
-    int                 	tdb_lock;   	//lock ID for time date buffer
-    uint8_t                 abt;        	//!= 0 cog requests a system abort,value = error code
+    int                 	tdb_lock;       //lock ID for time date buffer
+    uint8_t                 abt;            //!= 0 cog requests a system abort,value = error code
     uint8_t                 update_sec;     //trigger update, 1=wait, 0=update 
     uint8_t                 update_day; 	//trigger update, 1=wait, 0=update 
-    uint8_t     			sec;
-    uint8_t     			min;
-    uint8_t     			hour;
-    uint8_t     			day;
-    uint8_t     			month;
-    uint8_t     			year;
-    uint8_t     			dow;
+    uint8_t                 set;            //!= 0, set clock
+    uint8_t                 set_data[7];         //BCD, time and date to be loaded
+    uint8_t     			sec;            //current second
+    uint8_t     			min;            //current minute
+    uint8_t     			hour;           //current hour
+    uint8_t     			day;            //current day
+    uint8_t     			month;          //current month
+    uint8_t     			year;           //current year
+    uint8_t     			dow;            //current day of the week
 }RTC_CB;
     
 #endif // _RTC_H_

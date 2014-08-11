@@ -10,7 +10,7 @@
 
 
 #define INPUT_BUFFER	128				//input buffer size
-#define COMMANDS		12				//number of commands 
+#define COMMANDS		13				//number of commands 
 
 /* control block data structure */
 typedef volatile struct 

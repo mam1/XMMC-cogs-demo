@@ -67,8 +67,19 @@ int start_rtc(volatile void *parptr)
     memcpy(code, _load_start_rtc_cog, size); //assume xmmc
     return cognew(code, parptr);
 }
+/*
+uint8_t from_bcd(uint8_t d){
+  return (d & b(00001111)) + (((d & b(11110000)) >> 4) * 10);
+}
 
+uint8_t to_bcd(uint8_t d){
+  return (((d / 10) << 4) & b(11110000)) | ((d % 10) & b(00001111));
+}
+*/
 
+uint8_t to_bcd(uint8_t d){
+  return (((d / 10) << 4) & 0xF0 )| ((d % 10) & 0xF);
+}
 
 /* command processor command list */
 char    *command[COMMANDS] = {
@@ -83,7 +94,8 @@ char    *command[COMMANDS] = {
 /*  8 */    "queryC",
 /*  9 */    "status",
 /* 10 */    "exit",
-/* 11 */    "time"};
+/* 11 */    "time",
+/* 12 */    "s"};
 
 
 
@@ -165,7 +177,10 @@ void status(void)
 int main(void)
 {
     char        input_buffer[INPUT_BUFFER]; //buffer for user input
+    int         set[7] ={1,1,1,1,1,1,14};
+    int         i;
     waitcnt(500000 + _CNT);                 //wait until initialization is complete
+    printf("%s","\033c\n");
     printf("XMMC-cogc demo v%s",VERSION);   //display startup message  
 
 /* start monitoring the real time clock DS3231 */
@@ -260,6 +275,14 @@ int main(void)
                     rtc_cb.rtc.month,
                     rtc_cb.rtc.day,
                     rtc_cb.rtc.year+2000);
+                break;
+            case 12:    //s
+                for(i=0;i<7;i++)
+                {
+                    rtc_cb.rtc.set = 1;
+                    rtc_cb.rtc.set_data[i] = to_bcd(set[i]);
+                }
+                printf("clock reset\n");
                 break;
             default:
                 printf("<%s> is not a valid command\n",input_buffer);
